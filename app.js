@@ -31,7 +31,7 @@ app.use(
 
 app.get('/', (req, res) => {
     if (req.session.userid) {
-        res.render('dashboard')
+        res.render('login')
     } else {
         res.render('login')
     }
@@ -53,18 +53,17 @@ app.post('/', (req, res) => {
         res.render('dashboard')
         }
 
-    client.hget('users', username, (err, userid) => {
-        
-        if (!userid) {
-          //user does not exist, signup procedure
-          client.incr('userid', async (err, userid) => {
-            client.hset('users', username, userid)
-            const saltRounds =10
-            const hash = await bcrypt.hash(password, saltRounds)
-            client.hset(`user:${userid}`, 'hash', hash, 'username', username)
-            saveSessionAndRenderDashboard(userid)
-        })
-        } else {
+        const handleSignup = (username, password) => {
+            client.incr('userid', async (err, userid) => {
+                client.hset('users', username, userid)
+                const saltRounds =10
+                const hash = await bcrypt.hash(password, saltRounds)
+                client.hset(`user:${userid}`, 'hash', hash, 'username', username)
+                saveSessionAndRenderDashboard(userid)
+            })
+        }
+
+        const handleLogin = (userid, password) => {
             client.hget(`user:${userid}`, 'hash', async (err, hash) => {
                 const result = await bcrypt.compare(password, hash)
                 if (result) {
@@ -76,6 +75,14 @@ app.post('/', (req, res) => {
                   return
                 }
               })
+        }
+
+    client.hget('users', username, (err, userid) => {
+        if (!userid) {
+          //user does not exist, signup procedure
+          handleSignup(username, password)
+        } else {
+            handleLogin(userid, password)
             }
         })
       
