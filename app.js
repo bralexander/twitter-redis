@@ -31,11 +31,34 @@ app.use(
 
 app.get('/', (req, res) => {
     if (req.session.userid) {
-        res.render('login')
+        res.render('dashboard')
     } else {
         res.render('login')
     }
 })
+
+app.get('/post', (req, res) => {
+    if (req.session.userid) {
+        res.render('post')
+    } else {
+        res.render('login')
+    }
+})
+
+app.post('/post', (req, res) => {
+  if (!req.session.userid) {
+    res.render('login')
+    return
+  }
+  
+  const { message } = req.body
+  
+  client.incr('postid', async (err, postid) => {
+    client.hmset(`post:${postid}`, 'userid', req.session.userid, 'message', message, 'timestamp', Date.now())
+    res.render('dashboard')
+  })
+})
+  
 
 app.post('/', (req, res) => {
     const { username, password } = req.body
