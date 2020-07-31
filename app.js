@@ -29,13 +29,18 @@ app.use(
     })
   )
 
-app.get('/', (req, res) => {
+  app.get('/', (req, res) => {
     if (req.session.userid) {
-        res.render('dashboard')
+      client.hkeys('users', (err, users) => {
+        console.log(users)
+        res.render('dashboard', {
+          users
+        })
+      })
     } else {
-        res.render('login')
+      res.render('login')
     }
-})
+  })
 
 app.get('/post', (req, res) => {
     if (req.session.userid) {
