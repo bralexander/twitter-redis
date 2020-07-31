@@ -76,10 +76,14 @@ app.post('/', (req, res) => {
     }
 
     const saveSessionAndRenderDashboard = userid => {
-        req.session.userid = userid
-        req.session.save()
-        res.render('dashboard')
-        }
+      req.session.userid = userid
+      req.session.save()
+      client.hkeys('users', (err, users) => {
+        res.render('dashboard', {
+          users
+        })
+      })
+    }
 
         const handleSignup = (username, password) => {
             client.incr('userid', async (err, userid) => {
